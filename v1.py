@@ -1,37 +1,9 @@
 import asyncio
 import json
-from collections import Counter
-from itertools import chain
 
 from datasets import load_dataset
 from math_verify import parse, verify
 from pydantic_ai import Agent
-from transformers import AutoTokenizer
-
-
-class MathDataset:
-    def __init__(
-        self,
-        data_path: str = "AI-MO/aimo-validation-aime",
-        model_name: str = "openai:gpt-5-mini",
-        tokenizer_name: str = "Qwen/Qwen3-0.6B",
-    ) -> None:
-        ds = load_dataset(data_path, split="train")
-        self.questions = [str(question) for question in ds["problem"]]
-        self.answers = [str(answer) for answer in ds["answer"]]
-        self.agent = Agent(model_name)
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-
-    @property
-    def num_unique_tokens(self) -> int:
-        input_ids = self.tokenizer(self.questions)["input_ids"]
-        return len(set(chain(*input_ids)))
-
-    @property
-    def token_counts(self) -> dict[str, int]:
-        input_ids = self.tokenizer(self.questions)["input_ids"]
-        return {self.tokenizer.decode(i): c for i, c in Counter(chain(*input_ids)).items()}
-
 
 TRANSFORM_PROMPT = """\
 Transform the following math question into a compact, line-based DSL that preserves the exact mathematics.
