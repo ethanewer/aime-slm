@@ -9,6 +9,7 @@ dependencies = [
     "ipykernel>=7.0.1",
     "ipynotebook>=0.1.0",
     "ipywidgets>=8.1.7",
+    "math-verify>=0.8.0",
     "matplotlib>=3.10.7",
     "numpy>=2.3.4",
     "pydantic-ai>=1.1.0",
