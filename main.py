@@ -1,11 +1,12 @@
-from datasets import load_dataset, Dataset
-from pydantic_ai import Agent, RunContext
-from transformers import AutoTokenizer
 import asyncio
-from itertools import chain
-from collections import Counter
 import json
+from collections import Counter
+from itertools import chain
+
+from datasets import load_dataset
 from math_verify import parse, verify
+from pydantic_ai import Agent
+from transformers import AutoTokenizer
 
 
 class MathDataset:
@@ -86,7 +87,7 @@ find m + n
 NOW CONVERT THIS QUESTION
 """
 
-SOLVE_PROMPT = "Solve the following question and provide your answer in \\boxed{}\n\n"""
+SOLVE_PROMPT = "Solve the following question and provide your answer in \\boxed{}\n\n"
 
 
 async def map_agent(agent: Agent, prompts: list[str]) -> list[str]:
@@ -106,10 +107,12 @@ async def main() -> None:
     answers = [str(answer) for answer in ds["answer"]]
 
     agent = Agent("openai:gpt-5")
-    
+
+    print("Transforming questions.")
     transformed_questions = await map_agent(agent, [TRANSFORM_PROMPT + question for question in questions])
 
-    base_llm_answers, transformed_llm_answers = await asyncio.gather( 
+    print("Solving questions.")
+    base_llm_answers, transformed_llm_answers = await asyncio.gather(
         map_agent(agent, [SOLVE_PROMPT + question for question in questions]),
         map_agent(agent, [SOLVE_PROMPT + question for question in transformed_questions]),
     )
@@ -127,17 +130,15 @@ async def main() -> None:
                 "transformed_llm_answer": transformed_llm_answer,
             }
             for question, answer, transformed_question, base_llm_answer, transformed_llm_answer in zip(
-                questions, 
-                answers, 
-                transformed_questions, 
-                base_llm_answers, 
+                questions,
+                answers,
+                transformed_questions,
+                base_llm_answers,
                 transformed_llm_answers,
             )
         ]
         json.dump(obj, f)
 
-    
 
-    
-
-
+if __name__ == "__main__":
+    asyncio.run(main())
