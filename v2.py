@@ -44,11 +44,10 @@ async def main() -> None:
     with open("data/v1.json") as f:
         data = json.load(f)
 
-    questions = data["transformed_questions"]
-    answers = data["answers"]
+    questions = [item["transformed_question"] for item in data]
+    answers = [item["answer"] for item in data]
     input_ids = tokenizer(questions)["input_ids"]
     id_counts = Counter(chain(*input_ids))
-    bad_ids = {i for i, c in id_counts.items() if c == 1}
     print(f"Before: {len(id_counts)} unique tokens.")
 
     agent = Agent("openai:gpt-5")
@@ -57,7 +56,7 @@ async def main() -> None:
     def check_question(_, question: str) -> str:
         """Reports if a question satisfies the token requirements."""
         ids = tokenizer.encode(question)
-        bad_ids_in_question = set(ids) & bad_ids
+        bad_ids_in_question = set(i for i in ids if id_counts[i] <= 1)
         if bad_ids_in_question:
             tokenized_question = [tokenizer.decode(i) for i in ids]
             bad_tokens_in_question = sorted(tokenizer.decode(i) for i in bad_ids_in_question)
